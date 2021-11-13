@@ -1,10 +1,10 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
-	"fmt"
-	"encoding/json"
 )
 
 //定义链码
