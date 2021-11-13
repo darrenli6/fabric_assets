@@ -11,7 +11,7 @@ client:
     type: eventhub
   cryptoconfig:
     #修改路径如下
-    path: ${GOPATH}/src/fabric_asset/deploy/crypto-config
+    path: ${GOPATH}/src/fabric_asset/deploy0/crypto-config
 
   credentialStore:
     path: "/tmp/state-store"

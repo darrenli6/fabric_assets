@@ -1,0 +1,40 @@
+#管理排序节点的组织
+OrdererOrgs:
+  #定义组织的名字
+  - Name: Orderer
+    #定义域名
+    Domain: example.com
+    #定义组织下的节点信息
+    Specs:
+      #为排序组织定义一个节点
+      #kafka模式，可以加入多个- Hostname
+      - Hostname: orderer
+#管理配置节点的组织
+PeerOrgs:
+  #组织名字
+  - Name: Org0
+    #域名
+    Domain: org0.example.com
+    #定义组织下节点的个数
+    #使用模板定义了2个节点
+    Template:
+      Count: 2
+    #定义有多少个用户
+    #有一个Admin是自动生成，user1
+    Users:
+      Count: 2
+  #组织名字
+  - Name: Org1
+    #域名
+    Domain: org1.example.com
+    #生成peer
+    Specs:
+      - Hostname: peer0
+      - Hostname: peer1
+    Template:
+      Count: 2
+      #start默认为全启动
+      Start: 2
+    #会生成3个，Admin user1,2
+    Users:
+      Count: 3
