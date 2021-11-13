@@ -1,0 +1,83 @@
+---
+#联盟配置
+#联盟内的组织对区块链的操作
+Profiles:
+    #系统链的配置
+    #全局配置
+    OneOrgsOrdererGenesis:
+        Orderer:
+            <<: *OrdererDefaults
+            Organizations:
+                - *OrdererOrg
+        Consortiums:
+            SampleConsortium:
+                Organizations:
+                    - *Org0
+                    - *Org1
+    #业务相关的配置
+    TwoOrgsChannel:
+        Consortium: SampleConsortium
+        Application:
+            <<: *ApplicationDefaults
+            Organizations:
+                - *Org0
+                - *Org1
+
+Organizations:
+    #组织内的配置
+    - &OrdererOrg
+        #组织名字
+        Name: OrdererOrg
+        #组织ID
+        ID: OrdererMSP
+        #组织证书的位置
+        MSPDir: crypto-config/ordererOrganizations/example.com/msp
+
+    - &Org0
+        Name: Org0MSP
+
+        ID: Org0MSP
+
+        MSPDir: crypto-config/peerOrganizations/org0.example.com/msp
+        #锚节点的配置
+        AnchorPeers:
+            - Host: peer0.org0.example.com
+              Port: 7051
+
+    - &Org1
+        Name: Org1MSP
+
+        ID: Org1MSP
+
+        MSPDir: crypto-config/peerOrganizations/org1.example.com/msp
+        #锚节点
+        AnchorPeers:
+            - Host: peer0.org1.example.com
+              Port: 7051
+#orderer配置
+Orderer: &OrdererDefaults
+    #配置共识机制
+    OrdererType: solo
+
+    Addresses:
+        - orderer.example.com:7050
+    #出块的时间间隔
+    BatchTimeout: 2s
+    #每个块的大小信息
+    BatchSize:
+
+        MaxMessageCount: 10
+
+        AbsoluteMaxBytes: 99 MB
+
+        PreferredMaxBytes: 512 KB
+    #kafka的配置
+    Kafka:
+        Brokers:
+            - 127.0.0.1:9092
+
+    Organizations:
+
+Application: &ApplicationDefaults
+
+    Organizations:

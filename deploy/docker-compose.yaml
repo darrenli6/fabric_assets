@@ -1,0 +1,173 @@
+version: '2'
+
+services:
+
+  #1.系统一些环境变量的配置
+  #2.端口的映射关系
+  #3.文件的映射关系
+
+  orderer.example.com:
+    container_name: orderer.example.com
+    #指定使用镜像名称
+    image: hyperledger/fabric-orderer:x86_64-1.0.0
+    #环境变量的配置
+    environment:
+      #设置日志级别
+      - ORDERER_GENERAL_LOGLEVEL=debug
+      #服务暴露的地址
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      #下面2个是注入创世区块
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/etc/hyperledger/config/genesis.block
+      #下面2个是证书相关的配置
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/etc/hyperledger/orderer/msp
+    working_dir: /home/go_work/src/github.com/hyperledger/fabric/orderer
+    command: orderer
+    ports:
+      #前面是本机的，端口映射
+      - 7050:7050
+    volumes:
+        - ./config/genesis.block:/etc/hyperledger/config/genesis.block
+        - ./crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/:/etc/hyperledger/orderer
+
+  #peer的基础设置
+  peer.base:
+    image: hyperledger/fabric-peer:x86_64-1.0.0
+    environment:
+      #peer节点可能对chaincode做一些操作
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      #日志级别
+      - CORE_LOGGING_PEER=debug
+
+      #开启开发者模式
+      #- CORE_CHAINCODE_MODE=dev
+
+      #关于链码的日志级别
+      - CORE_CHAINCODE_LOGGING_LEVEL=DEBUG
+      #msp证书
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/peer/msp
+      #状态数据库的存储引擎，这里配置使用levledb
+      - CORE_LEDGER_STATE_STATEDATABASE=goleveldb
+      #配置chaincode与peer节点使用的网络，同一个网络
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=deploy_default
+    working_dir: /home/go_work/src/github.com/hyperledger/fabric
+    command: peer node start
+    #开启开发者模式
+    #command: peer node start --peer-chaincodedev=true
+
+  peer0.org0.example.com:
+    extends:
+      service: peer.base
+    container_name: peer0.org0.example.com
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer0.org0.example.com
+      - CORE_PEER_LOCALMSPID=Org0MSP
+      - CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+    ports:
+      #grpc的端口
+      - 7051:7051
+      #事件监听的端口
+      - 7053:7053
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./crypto-config/peerOrganizations/org0.example.com/peers/peer0.org0.example.com:/etc/hyperledger/peer
+    depends_on:
+      - orderer.example.com
+
+  peer1.org0.example.com:
+    extends:
+      service: peer.base
+    container_name: peer1.org0.example.com
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer1.org0.example.com
+      - CORE_PEER_LOCALMSPID=Org0MSP
+      - CORE_PEER_ADDRESS=peer1.org0.example.com:7051
+    ports:
+      #别与上面peer0的端口冲突就可以
+      - 17051:7051
+      - 17053:7053
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./crypto-config/peerOrganizations/org0.example.com/peers/peer1.org0.example.com:/etc/hyperledger/peer
+    depends_on:
+      - orderer.example.com
+
+  peer0.org1.example.com:
+    extends:
+      service: peer.base
+    container_name: peer0.org1.example.com
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer0.org1.example.com
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+    ports:
+      #注意端口不冲突就可以
+      - 27051:7051
+      - 27053:7053
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com:/etc/hyperledger/peer
+    depends_on:
+      - orderer.example.com
+
+  peer1.org1.example.com:
+    extends:
+      service: peer.base
+    container_name: peer1.org1.example.com
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer1.org1.example.com
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_ADDRESS=peer1.org1.example.com:7051
+    ports:
+      #注意端口不冲突就可以
+      - 37051:7051
+      - 37053:7053
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com:/etc/hyperledger/peer
+    depends_on:
+      - orderer.example.com
+
+  peer2.org1.example.com:
+    extends:
+      service: peer.base
+    container_name: peer2.org1.example.com
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_PEER_ID=peer2.org1.example.com
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_ADDRESS=peer2.org1.example.com:7051
+    ports:
+      - 47051:7051
+      - 47053:7053
+    volumes:
+      - /var/run/:/host/var/run/
+      - ./crypto-config/peerOrganizations/org1.example.com/peers/peer2.org1.example.com:/etc/hyperledger/peer
+    depends_on:
+      - orderer.example.com
+
+  #peer节点客户端配置
+  cli:
+    container_name: cli
+    image: hyperledger/fabric-tools
+    tty: true
+    environment:
+      - GOPATH=/home/go_work
+      - CORE_LOGGING_LEVEL=DEBUG
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/peer/users/Admin@org1.example.com/msp
+    working_dir: /home/go_work/src/github.com/hyperledger/fabric/
+    command: /bin/bash
+    volumes:
+      #链码路径的注入
+      #本地中的相对路径，映射的容器中的绝对路径
+      - ./../chaincode:/home/go_work/src/github.com/chaincode
+      - ./config:/etc/hyperledger/config
+      - ./crypto-config/peerOrganizations/org1.example.com/:/etc/hyperledger/peer
