@@ -5,5 +5,5 @@
 - fabric-sdk升级合约
 - fabric-sdk触发合约
 - fabric-sdk查询合约
--fabric-sdk操作fabric-ca
+- fabric-sdk操作fabric-ca
 - fabric-sdk在fabric-ca中注册用户
